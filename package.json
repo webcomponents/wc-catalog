@@ -1,0 +1,14 @@
+{
+  "name": "webcomponents.org",
+  "private": "true",
+  "version": "0.0.0",
+  "description": "A new implementation of the webcompoents.org site",
+  "scripts": {
+    "lerna": "lerna",
+    "bootstrap": "lerna bootstrap"
+  },
+  "license": "BSD-3-Clause",
+  "dependencies": {
+    "lerna": "^4.0.0"
+  }
+}
