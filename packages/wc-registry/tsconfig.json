@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "incremental": true,
+    "target": "es2020", 
+    "module": "ES2020", 
+    // "lib": [], 
+    // "declaration": true,
+    // "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./", 
+    "rootDir": "./src", 
+    "composite": true,
+    // "tsBuildInfoFile": "./", 
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "moduleResolution": "node", 
+    // "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true 
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": []
+}

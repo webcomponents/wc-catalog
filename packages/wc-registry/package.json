@@ -1,0 +1,29 @@
+{
+  "name": "wc-registry",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The web component registry server",
+  "author": "Justin Fagnani <justinfagnani@google.com>",
+  "homepage": "",
+  "license": "BSD-3-Clause",
+  "type": "module",
+  "main": "index.js",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "start": "node index.js",
+    "build": "tsc",
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "devDependencies": {
+    "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "@koa/router": "^10.0.0",
+    "@types/koa": "^2.13.1",
+    "@types/koa__router": "^8.0.4",
+    "@types/node": "^15.0.1",
+    "koa": "^2.13.1"
+  }
+}
