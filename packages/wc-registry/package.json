@@ -13,17 +13,23 @@
   ],
   "scripts": {
     "start": "node index.js",
+    "dev": "FIRESTORE_EMULATOR_HOST=localhost:8088 npm start",
     "build": "tsc",
+    "emulators:start": "firebase emulators:start --project wc-org",
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "devDependencies": {
+    "firebase-tools": "^9.10.0",
     "typescript": "^4.2.4"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^4.10.1",
     "@koa/router": "^10.0.0",
     "@types/koa": "^2.13.1",
     "@types/koa__router": "^8.0.4",
     "@types/node": "^15.0.1",
+    "firebase": "^8.4.3",
+    "firebase-admin": "^9.7.0",
     "koa": "^2.13.1"
   }
 }

@@ -4,3 +4,6 @@
 /test/
 /index.*
 !/custom_typings/*.d.ts
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
