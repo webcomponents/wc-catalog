@@ -15,10 +15,15 @@
     "start": "node index.js",
     "dev": "FIRESTORE_EMULATOR_HOST=localhost:8088 npm start",
     "build": "tsc",
+    "build:graphql": "graphql-codegen",
     "emulators:start": "firebase emulators:start --project wc-org",
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "^1.21.4",
+    "@graphql-codegen/typescript": "^1.22.0",
+    "@graphql-codegen/typescript-resolvers": "^1.19.1",
+    "@types/koa-graphql": "^0.8.4",
     "firebase-tools": "^9.10.0",
     "typescript": "^4.2.4"
   },
@@ -30,6 +35,8 @@
     "@types/node": "^15.0.1",
     "firebase": "^8.4.3",
     "firebase-admin": "^9.7.0",
-    "koa": "^2.13.1"
+    "graphql": "^15.5.0",
+    "koa": "^2.13.1",
+    "koa-graphql": "^0.8.0"
   }
 }

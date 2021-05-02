@@ -1,0 +1,9 @@
+type Query {
+
+  count: Int!
+  
+}
+
+scalar Date
+
+scalar JSON

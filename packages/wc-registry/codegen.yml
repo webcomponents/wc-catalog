@@ -1,0 +1,14 @@
+schema: ./schema.graphql
+
+generates:
+  gen/schema.d.ts:
+    plugins:
+      - typescript
+    config:
+      noSchemaStitching: true
+  gen/resolvers.d.ts:
+    plugins:
+      - typescript
+      - typescript-resolvers
+    config:
+      noSchemaStitching: true
