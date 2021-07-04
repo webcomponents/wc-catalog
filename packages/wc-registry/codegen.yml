@@ -1,14 +1,15 @@
-schema: ./schema.graphql
+schema: ./src/lib/schema.graphql
 
 generates:
-  gen/schema.d.ts:
+  gen/lib/schema.ts:
     plugins:
       - typescript
-    config:
-      noSchemaStitching: true
-  gen/resolvers.d.ts:
-    plugins:
-      - typescript
+      - typed-document-node
       - typescript-resolvers
     config:
+      declarationKind: interface
+      dedupeOperationSuffix: true
+      immutableTypes: true
+      namingConvention: keep
       noSchemaStitching: true
+      operationResultSuffix: Data

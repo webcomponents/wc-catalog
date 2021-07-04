@@ -3,130 +3,61 @@
  * Copyright 2021 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-
+import sourceMapSupport from 'source-map-support'; 
 import Koa from 'koa';
 import Router from '@koa/router';
 import type {AddressInfo} from 'net';
 
-import firebase from 'firebase-admin';
+import {
+  getGraphQLParameters,
+  processRequest,
+  renderGraphiQL,
+  shouldRenderGraphiQL,
+} from 'graphql-helix';
+import bodyParser from 'koa-bodyparser';
 
-import {Firestore} from '@google-cloud/firestore';
+import {schema} from './lib/graphql.js';
 
-import {buildSchema} from 'graphql';
-import {readFile} from 'fs/promises';
-import {resolve, dirname} from 'path';
-import graphqlHTTP from 'koa-graphql';
-
-import type {PackageInfo, PackageVersion, Resolvers} from '../gen/resolvers';
-import { packageInfoConverter, PackageStatus, packageVersionConverter, VersionStatus } from './lib/firestore.js';
-import { getPackage } from './lib/npm.js';
-
-const base  = dirname(new URL(import.meta.url).pathname);
-const schemaSource = await readFile(resolve(base, './schema.graphql'), 'utf8');
-
-const schema = buildSchema(schemaSource);
-
-firebase.initializeApp({
-  projectId: 'wc-org',
-});
-
-const db = new Firestore({
-  projectId: 'wc-org'
-});
-const packagesRef = db.collection('packages');
-
-const resolvers: Resolvers = {
-  Query: {
-    // @ts-expect-error
-    async packageInfo({packageName}: {packageName: string}) {
-      console.log('packageInfo', packageName);
-      const packageRef = packagesRef.doc(packageName);
-      const packageDoc = await packageRef.withConverter(packageInfoConverter).get();
-      if (packageDoc.exists) {
-        const packageInfo = packageDoc.data()!;
-        const status = packageInfo.status;
-        switch (status) {
-          case PackageStatus.READY: {
-            const versionsRef = packageRef.collection('versions');
-            const versionsResults = await versionsRef.withConverter(packageVersionConverter).get();
-            const versions: Array<PackageVersion> = [];
-            for (const versionDoc of versionsResults.docs) {
-              versions.push(versionDoc.data());
-            }
-            return {
-              ...packageInfo,
-              versions,
-            };
-          }
-          case PackageStatus.INITIALIZING: {
-            throw new Error(`unhandled ${status}`);
-            return undefined;
-          }
-          default:
-            // exhaustiveness check
-            status as void;
-        }
-        throw new Error(`unhandled ${status}`);
-      } else {
-        console.log('package not found in db');
-        const [, npmPackage] = await Promise.all([
-          // Mark package as initializing.
-          packageRef.create({status: PackageStatus.INITIALIZING}),
-          await getPackage(packageName),
-        ]);
-
-        const versions = Object.entries(npmPackage.versions);
-        const versionMap = new Map<string, PackageVersion>();
-
-        await Promise.all(versions.map(async ([version, versionData]) => {
-          // First, write initial data including the "initialized" status
-          const versionRef = packageRef.collection('versions').doc(version);
-          /* const versionDoc = */ await versionRef.create({
-            status: VersionStatus.INITIALIZING,
-            description: versionData.description,
-            type: versionData.type,
-          });
-
-          // // Next, download the tarball so we can get at custom-elements.json
-          // console.log('downloading tarball for', version);
-          // const destination = await downloadPackage(npmPackage, version, './package_downloads/');
-
-          versionMap.set(version, {
-            version,
-            description: versionData.description,
-            // type: versionData.type,
-          });
-        }));
-
-        // Mark package as ready.
-        await packageRef.set({status: PackageStatus.READY});
-
-        const packageInfo: PackageInfo = {
-          name: packageName,
-          description: 'TODO',
-          versions: [...versionMap.values()],
-        };
-        return packageInfo;
-      }
-    },
-  },
-};
+sourceMapSupport.install();
 
 const app = new Koa();
 
 const router = new Router();
 
-router.all('/graphql', graphqlHTTP({
-  schema,
-  rootValue: resolvers.Query,
-  graphiql: true,
-  formatError: (error, _ctx) => ({
-    message: error.message,
-    locations: error.locations,
-    stack: error.stack ? error.stack.split('\n') : [],
-    path: error.path
-  }),
-}));
+router.use(bodyParser());
+
+router.all('/graphql', async (context) => {
+  const request = {
+    body: context.request.body,
+    headers: context.req.headers,
+    method: context.request.method,
+    query: context.request.query,
+  };
+
+  if (shouldRenderGraphiQL(request)) {
+    context.body = renderGraphiQL({});
+  } else {
+    const {operationName, query, variables} = getGraphQLParameters(request);
+
+    const result = await processRequest({
+      operationName,
+      query,
+      variables,
+      request,
+      schema,
+    });
+
+    if (result.type === 'RESPONSE') {
+      result.headers.forEach(({name, value}) =>
+        context.response.set(name, value)
+      );
+      context.status = result.status;
+      context.body = result.payload;
+    } else {
+      throw new Error(`Result type ${result.type} not supported`);
+    }
+  }
+});
 
 router.get('/', async (ctx) => {
   ctx.status = 200;

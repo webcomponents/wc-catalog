@@ -1,16 +1,12 @@
 {
   "compilerOptions": {
     "incremental": true,
-    "target": "es2020", 
+    "target": "es2021", 
     "module": "esnext", 
-    // "lib": [], 
-    // "declaration": true,
-    // "declarationMap": true,
     "sourceMap": true,
-    "outDir": "./", 
-    "rootDir": "./src", 
+    "outDir": "./out", 
+    "rootDirs": ["./src", "./gen"], 
     "composite": true,
-    // "tsBuildInfoFile": "./", 
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -19,12 +15,11 @@
     "noUncheckedIndexedAccess": true,
     "noPropertyAccessFromIndexSignature": true,
     "moduleResolution": "node", 
-    // "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true 
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "gen/**/*.ts"],
   "exclude": []
 }

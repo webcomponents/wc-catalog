@@ -1,14 +1,22 @@
 {
-  "name": "webcomponents.org",
+  "name": "webcomponents-repo",
   "private": "true",
   "version": "0.0.0",
   "description": "A new implementation of the webcompoents.org site",
+  "workspaces": [
+    "./packages/*"
+  ],
   "scripts": {
     "lerna": "lerna",
-    "bootstrap": "lerna bootstrap"
+    "bootstrap": "lerna bootstrap",
+    "format": "prettier ./packages/*/src/**/*.ts --write"
   },
   "license": "BSD-3-Clause",
   "dependencies": {
     "lerna": "^4.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^2.3.2",
+    "typescript": "^4.3.4"
   }
 }

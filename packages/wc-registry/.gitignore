@@ -1,10 +1,10 @@
 /demo/
 /lib/
+/out/
 /gen/
 /node_modules/
 /test/
 /index.*
-!/custom_typings/*.d.ts
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
