@@ -1,13 +1,15 @@
+/**
+ * @license
+ * Copyright 2021 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 import {readFile} from 'fs/promises';
 import {resolve, dirname} from 'path';
 import {makeExecutableSchema} from '@graphql-tools/schema';
 
 import type {Resolvers} from './schema.js';
-import {
-  deletePackage,
-  getPackageInfo,
-  importPackage,
-} from './firestore.js';
+import {deletePackage, getPackageInfo, importPackage} from './firestore.js';
 
 const schemaPath = resolve(
   dirname(new URL(import.meta.url).pathname),
@@ -32,7 +34,7 @@ const resolvers: Resolvers = {
       await deletePackage(packageName);
       return true;
     },
-  }
+  },
 };
 
 export const schema = makeExecutableSchema({
@@ -40,5 +42,5 @@ export const schema = makeExecutableSchema({
   resolvers,
   logger: {
     log: console.error,
-  }
+  },
 });

@@ -3,7 +3,8 @@
  * Copyright 2021 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-import sourceMapSupport from 'source-map-support'; 
+
+import sourceMapSupport from 'source-map-support';
 import Koa from 'koa';
 import Router from '@koa/router';
 import type {AddressInfo} from 'net';

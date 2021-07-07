@@ -11,10 +11,20 @@ import {
 } from '@google-cloud/firestore';
 import {Firestore} from '@google-cloud/firestore';
 import firebase from 'firebase-admin';
-import { CustomElementInfo, getCustomElements } from './manifest.js';
+import {CustomElementInfo, getCustomElements} from './manifest.js';
 import {fetchCustomElementsManifest, fetchPackage, Package} from './npm.js';
-import {CustomElement, PackageInfo, PackageStatus, PackageVersion, VersionStatus} from './schema.js';
-import {Module, Package as CustomElementsManifest, Reference} from 'custom-elements-manifest/schema';
+import {
+  CustomElement,
+  PackageInfo,
+  PackageStatus,
+  PackageVersion,
+  VersionStatus,
+} from './schema.js';
+import {
+  Module,
+  Package as CustomElementsManifest,
+  Reference,
+} from 'custom-elements-manifest/schema';
 
 const projectId = 'wc-catalog';
 
@@ -107,7 +117,9 @@ export const getPackageName = (getPackageDocId: string) =>
 //   status: PackageStatus;
 // };
 
-export const packageInfoConverter: FirestoreDataConverter<Omit<PackageInfo, 'versions'>> = {
+export const packageInfoConverter: FirestoreDataConverter<
+  Omit<PackageInfo, 'versions'>
+> = {
   fromFirestore(
     snapshot: QueryDocumentSnapshot<DocumentData>
   ): Omit<PackageInfo, 'versions'> {
@@ -126,43 +138,37 @@ export const packageInfoConverter: FirestoreDataConverter<Omit<PackageInfo, 'ver
 //   status: VersionStatus;
 // };
 
-export const packageVersionConverter: FirestoreDataConverter<PackageVersion> =
-  {
-    fromFirestore(
-      snapshot: QueryDocumentSnapshot<DocumentData>
-    ): PackageVersion {
-      return {
-        version: snapshot.id,
-        status: snapshot.get('status'),
-        description: snapshot.get('description'),
-        author: snapshot.get('author'),
-        time: snapshot.get('time'),
-        homepage: snapshot.get('homepage'),
-        customElements: snapshot.get('customElements'),
-        customElementsManifest: snapshot.get('customElementsManifest'),
-      };
-    },
-    toFirestore(_packageInfo: PackageVersion) {
-      throw new Error('not implemented');
-    },
-  };
+export const packageVersionConverter: FirestoreDataConverter<PackageVersion> = {
+  fromFirestore(snapshot: QueryDocumentSnapshot<DocumentData>): PackageVersion {
+    return {
+      version: snapshot.id,
+      status: snapshot.get('status'),
+      description: snapshot.get('description'),
+      author: snapshot.get('author'),
+      time: snapshot.get('time'),
+      homepage: snapshot.get('homepage'),
+      customElements: snapshot.get('customElements'),
+      customElementsManifest: snapshot.get('customElementsManifest'),
+    };
+  },
+  toFirestore(_packageInfo: PackageVersion) {
+    throw new Error('not implemented');
+  },
+};
 
-  export const customElementConverter: FirestoreDataConverter<CustomElement> =
-  {
-    fromFirestore(
-      snapshot: QueryDocumentSnapshot<DocumentData>
-    ): CustomElement {
-      return {
-        tagName: snapshot.get('tagName'),
-        className: snapshot.get('className'),
-        customElementExport: snapshot.get('customElementExport'),
-        jsExport: snapshot.get('jsExport'),
-      };
-    },
-    toFirestore(_packageInfo: CustomElement) {
-      throw new Error('not implemented');
-    },
-  };
+export const customElementConverter: FirestoreDataConverter<CustomElement> = {
+  fromFirestore(snapshot: QueryDocumentSnapshot<DocumentData>): CustomElement {
+    return {
+      tagName: snapshot.get('tagName'),
+      className: snapshot.get('className'),
+      customElementExport: snapshot.get('customElementExport'),
+      jsExport: snapshot.get('jsExport'),
+    };
+  },
+  toFirestore(_packageInfo: CustomElement) {
+    throw new Error('not implemented');
+  },
+};
 
 export const getPackageInfo = async (
   packageName: string
@@ -267,10 +273,11 @@ const importPackageVersions = async (
         // customElements: customElements ?? null,
       });
 
-      let customElementsManifest: CustomElementsManifest | undefined = undefined;
+      let customElementsManifest: CustomElementsManifest | undefined =
+        undefined;
       let customElementsManifestString: string | undefined = undefined;
       let customElements: Array<CustomElementInfo> | undefined = undefined;
-      
+
       if (customElementsPath !== undefined) {
         customElementsManifest = await fetchCustomElementsManifest(
           packageName,
@@ -284,7 +291,6 @@ const importPackageVersions = async (
           customElements = getCustomElements(customElementsManifest);
           console.log('customElements', customElements);
         }
-
       }
 
       const versionTime = time[version];
@@ -304,7 +310,7 @@ const importPackageVersions = async (
 
       if (customElements) {
         const customElementsRef = versionRef.collection('customElements');
-        for (const c of customElements) {          
+        for (const c of customElements) {
           const ceRef = customElementsRef.doc();
           const customElement = customElementInfoToSchema(packageName, c);
           ceRef.set({
@@ -324,7 +330,9 @@ const importPackageVersions = async (
         author: versionData.author?.name ?? '',
         time: versionTime,
         homepage: versionData.homepage,
-        customElements: customElements?.map((c) => customElementInfoToSchema(packageName, c)),
+        customElements: customElements?.map((c) =>
+          customElementInfoToSchema(packageName, c)
+        ),
         customElementsManifest: customElementsManifestString,
       });
     })
@@ -333,19 +341,22 @@ const importPackageVersions = async (
   return versions;
 };
 
-const customElementInfoToSchema = (packageName: string, info: CustomElementInfo): CustomElement => {
+const customElementInfoToSchema = (
+  packageName: string,
+  info: CustomElementInfo
+): CustomElement => {
   return {
     tagName: info.export.name,
     className: info.declaration.name,
-    customElementExport: referenceString(packageName, info.module,  info.export),
-    jsExport: referenceString(packageName, info.module,  info.declaration),
+    customElementExport: referenceString(packageName, info.module, info.export),
+    jsExport: referenceString(packageName, info.module, info.declaration),
     // declaration: info.,
   };
-}
+};
 
 const referenceString = (packageName: string, mod: Module, ref: Reference) => {
   return `${packageName}/${mod.path}#${ref.name}`;
-}
+};
 
 export const deletePackage = async (packageName: string) => {
   const packageDocId = getPackageDocId(packageName);
@@ -356,4 +367,4 @@ export const deletePackage = async (packageName: string) => {
     await v.ref.delete();
   }
   await packageRef.delete();
-}
+};

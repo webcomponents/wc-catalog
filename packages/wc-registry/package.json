@@ -2,14 +2,15 @@
   "name": "wc-registry",
   "version": "0.0.0",
   "private": true,
-  "description": "The web component registry server",
-  "author": "Justin Fagnani <justinfagnani@google.com>",
+  "description": "A web component registry server",
+  "author": "Google LLC",
   "homepage": "",
   "license": "BSD-3-Clause",
   "type": "module",
   "main": "index.js",
   "files": [
-    "lib"
+    "lib",
+    "index.{d.ts,d.ts.map,js,js.map}"
   ],
   "scripts": {
     "start": "node index.js",

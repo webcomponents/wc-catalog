@@ -1,10 +1,22 @@
-import {CustomElementDeclaration, CustomElementExport, Module, Package, Reference} from 'custom-elements-manifest/schema';
+/**
+ * @license
+ * Copyright 2021 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+import {
+  CustomElementDeclaration,
+  CustomElementExport,
+  Module,
+  Package,
+  Reference,
+} from 'custom-elements-manifest/schema';
 
 export type CustomElementInfo = {
-  package: Package,
-  module: Module,
-  export: CustomElementExport,
-  declaration: CustomElementDeclaration,
+  package: Package;
+  module: Module;
+  export: CustomElementExport;
+  declaration: CustomElementDeclaration;
 };
 
 export const getCustomElements = (pkg: Package): Array<CustomElementInfo> => {
@@ -34,7 +46,11 @@ export const getCustomElements = (pkg: Package): Array<CustomElementInfo> => {
   return customElements;
 };
 
-export const resolveReference = (pkg: Package, localModule: Module, ref: Reference) => {
+export const resolveReference = (
+  pkg: Package,
+  localModule: Module,
+  ref: Reference
+) => {
   // local reference
   if (ref.package !== undefined) {
     console.warn("Can't resolve cross-package reference", ref);

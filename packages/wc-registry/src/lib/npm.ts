@@ -14,9 +14,6 @@ import tar from 'tar';
 
 import {Package as CustomElementsManifest} from 'custom-elements-manifest/schema';
 
-
-// const readFile = promisify(fs.readFile);
-// const mkdir = promisify(fs.mkdir);
 const finished = promisify(streamLib.finished);
 
 // TODO: can we get this interface from somewhere canonical?
@@ -26,9 +23,9 @@ export interface Package {
   'dist-tags': {[tag: string]: string};
   versions: {[tag: string]: Version};
   time: {
-    modified: string,
-    created: string,
-    [version: string]: string,
+    modified: string;
+    created: string;
+    [version: string]: string;
   };
 }
 
@@ -41,7 +38,7 @@ export interface Version {
   main: string;
   module?: string;
 
-  author?: {name: string},
+  author?: {name: string};
   homepage?: string;
 
   repository: {

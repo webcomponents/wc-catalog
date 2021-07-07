@@ -4,7 +4,8 @@ The wc-registry package is a headless database service with a GraphQL API for im
 
 This registry acts an index of the data available on the npm registry and in the custom element manifest. It stores what is needed to efficiently perform queries, but does not store _all_ the detailed information in a package's package.json files or custom element manifests.
 
-We need to store just enough data to answer questions such as: 
+We need to store just enough data to answer questions such as:
+
 - Which packages contain custom elements?
 - What custom elements does a package contain?
 - What is the path to the custom elements manifest?
@@ -30,7 +31,7 @@ GraphiQL is a great way to develop the server and try out queries.
 
 ## Firestore
 
-[Google Cloud Firestore](https://cloud.google.com/firestore) is used to store data. It's easy-to-use, requires no configuration or maintence, authenticate  Cloud Run services automatically, and is fast and has a good document model for our use case.
+[Google Cloud Firestore](https://cloud.google.com/firestore) is used to store data. It's easy-to-use, requires no configuration or maintence, authenticate Cloud Run services automatically, and is fast and has a good document model for our use case.
 
 We use the Firebase emulators, which have a Firestore emulator, for local development.
 
@@ -42,13 +43,17 @@ The server has not been deployed to Google Cloud Run yet, so local development i
 
 There are two schemas at work in this server: The GraphQL schema that defines the API and the implicit Firestore schema use to store data. They are closely related, but not identical.
 
-Firestore is a document database modeled around collections. Event document belongs to a collection, and collections either belong to documents or are root collections.
+Firestore is a document database modeled around collections. Every document belongs to a collection, and collections either belong to documents or are root collections. See the [Firestore Data model documentation](https://cloud.google.com/firestore/docs/data-model).
 
 npm packages have data that is common to all versions and data specific to each version. We model this with a top-level packages collection which contains package documents. Packages then contain versions, and versions contain custom elements.
 
 Firestore documents are often reference with `/` separated paths. Paths have an alternating `{collection}/{document_id}` pattern. The structure for our schema looks like `/packages/{package_name}/versions/{version}/customElements/{id}`.
 
-Firestore enables search nested collections with a single query, so we can search across all custom element documents even though they're nested in packages and versions. Because custom elements will likely be included in many versions of a package, we need to design the schema to indicate which are the current version for efficient queries.
+Firestore enables searching nested collections with a single query, so we can search across all custom element documents even though they're nested in packages and versions. Because custom elements will likely be included in many versions of a package, we need to design the schema to indicate which are the current version for efficient queries.
+
+## Search
+
+TODO
 
 ## Data sources
 
@@ -65,3 +70,7 @@ When a package is first imported it's document is created with an initial state 
 ## Authentication & authorization
 
 TODO: Not implemented
+
+While the registry query API is public, we need authorization for database mutation / maintainence operations, or personalization, like starring and tagging packages/elements, removing packages, maintaing tags, etc.
+
+The [Google Cloud Identity Platform](https://cloud.google.com/identity-platform) offer authentication as a service that works well with Cloud Run. App-specific permissions can be kept in a users collection.
