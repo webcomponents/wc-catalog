@@ -18,7 +18,7 @@
     "build": "npm run build:graphql && npm run build:ts && npm run build:copy",
     "build:ts": "../../node_modules/.bin/tsc",
     "build:copy": "cp -r out/{src,gen}/* .",
-    "build:graphql": "graphql-codegen",
+    "build:graphql": "graphql-codegen -c codegen.yml",
     "emulators:start": "firebase emulators:start --project wc-catalog",
     "firebase": "firebase",
     "test": "echo \"Error: run tests from root\" && exit 1"
