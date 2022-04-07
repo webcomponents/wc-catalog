@@ -47,7 +47,4 @@ const resolvers: Resolvers = {
 export const schema = makeExecutableSchema({
   typeDefs: schemaSource,
   resolvers,
-  logger: {
-    log: console.error,
-  },
 });
