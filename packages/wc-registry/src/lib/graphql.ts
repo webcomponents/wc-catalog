@@ -20,6 +20,7 @@ const schemaSource = await readFile(schemaPath, 'utf8');
 const resolvers: Resolvers = {
   Query: {
     async package(_parent, {packageName}: {packageName: string}) {
+      console.log('query package', packageName);
       const packageInfo = await getPackageInfo(packageName);
       if (packageInfo !== undefined) {
         return packageInfo;
@@ -30,7 +31,13 @@ const resolvers: Resolvers = {
     },
   },
   Mutation: {
+    async importPackage(_parent, {packageName}: {packageName: string}) {
+      console.log('mutation deletePackage', packageName);
+      const packageInfo = await importPackage(packageName);
+      return packageInfo;
+    },
     async deletePackage(_parent, {packageName}: {packageName: string}) {
+      console.log('mutation deletePackage', packageName);
       await deletePackage(packageName);
       return true;
     },
