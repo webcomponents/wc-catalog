@@ -12,14 +12,9 @@
 import {readFile} from 'fs/promises';
 import fetch from 'node-fetch';
 import npmFetch from 'npm-registry-fetch';
-// import {promisify} from 'util';
 import path from 'path';
-// import streamLib from 'stream';
-// import tar from 'tar';
 
 import {Package as CustomElementsManifest} from 'custom-elements-manifest/schema';
-
-// const finished = promisify(streamLib.finished);
 
 // TODO: can we get this interface from somewhere canonical?
 export interface Package {
@@ -108,7 +103,7 @@ export const fetchCustomElementsManifest = async (
     const response = await fetch(unpkgUrl);
     // await here so any parse error is caught
     const data = await response.json();
-    return data;
+    return data as CustomElementsManifest;
   } catch (_e) {
     return undefined;
   }
