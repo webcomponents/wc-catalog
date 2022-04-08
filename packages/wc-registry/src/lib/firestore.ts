@@ -78,6 +78,7 @@ export const packageVersionConverter: FirestoreDataConverter<PackageVersion> = {
       status: snapshot.get('status'),
       lastUpdate: (snapshot.get('lastUpdate') as Timestamp).toDate(),
       description: snapshot.get('description'),
+      type: snapshot.get('type'),
       author: snapshot.get('author'),
       time: snapshot.get('time'),
       homepage: snapshot.get('homepage'),
@@ -231,60 +232,56 @@ const importPackageVersions = async (
   const npmVersions = Object.entries(npmPackage.versions);
   const versions: Array<PackageVersion> = [];
 
-  const time = npmPackage.time;
 
   await Promise.all(
     npmVersions.map(async ([version, versionData]) => {
-      // console.log(version, versionData);
       // First, write initial data including the "initialized" status
       const versionRef = packageRef.collection('versions').doc(version);
-      const customElementsPath = versionData.customElements;
-
       await versionRef.create({
         status: VersionStatus.INITIALIZING,
         lastUpdate: FieldValue.serverTimestamp(),
-        description: versionData.description ?? '',
-        type: versionData.type ?? 'commonjs',
-        // customElements: customElements ?? null,
       });
 
+      // Look for a customElements field in package.json, fetch the file if the
+      // field exists, and extract custom elements from it.
       let customElementsManifest: CustomElementsManifest | undefined =
         undefined;
       let customElementsManifestString: string | undefined = undefined;
       let customElements: Array<CustomElementInfo> | undefined = undefined;
 
-      if (customElementsPath !== undefined) {
+      if (versionData.customElements !== undefined) {
         customElementsManifest = await fetchCustomElementsManifest(
           packageName,
           version,
-          customElementsPath
+          versionData.customElements
         );
 
         if (customElementsManifest) {
-          // console.log('found customElementsManifest', version);
           customElementsManifestString = JSON.stringify(customElementsManifest);
           customElements = getCustomElements(customElementsManifest);
-          // console.log('customElements', customElements);
         }
       }
 
-      const versionTime = time[version];
+      const packageTime = npmPackage.time[version];
+      const packageType = versionData.type ?? 'commonjs';
+      const author = versionData.author?.name ?? '';
 
-      // Store version data and mark version as ready
+      // Store package data and mark version as ready
+      // TODO: we want this type to match the schema and converter type. How do
+      // we get strongly typed refs?
       const readyResult = await versionRef.set({
         status: VersionStatus.READY,
         lastUpdate: FieldValue.serverTimestamp(),
-        description: versionData.description,
-        author: versionData.author?.name ?? '',
-        time: versionTime,
+        description: versionData.description ?? '',
+        type: packageType,
+        author: author,
+        time: packageTime,
         homepage: versionData.homepage ?? null,
-        // customElements: customElements ?? null,
-        // customElementsManifest: customElementsManifestString ?? null,
+        customElementsManifest: customElementsManifestString ?? null,
       });
 
-      // TODO: store custom elements in collection
-
-      if (customElements) {
+      // Store custom elements data in subcollection
+      if (customElements !== undefined) {
         const customElementsRef = versionRef.collection('customElements');
         for (const c of customElements) {
           const ceRef = customElementsRef.doc();
@@ -303,9 +300,9 @@ const importPackageVersions = async (
         status: VersionStatus.READY,
         lastUpdate: readyResult.writeTime,
         description: versionData.description,
-        // type: versionData.type,
-        author: versionData.author?.name ?? '',
-        time: versionTime,
+        type: packageType,
+        author: author,
+        time: packageTime,
         homepage: versionData.homepage,
         customElements: customElements?.map((c) =>
           customElementInfoToSchema(packageName, c)

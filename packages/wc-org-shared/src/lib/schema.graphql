@@ -114,6 +114,11 @@ type PackageVersion {
 
   description: String!
 
+  """
+  The npm package type: 'module' or 'commonjs'.
+  """
+  type: String!
+
   author: String!
 
   """
