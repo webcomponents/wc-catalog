@@ -19,7 +19,7 @@ import {
   PackageStatus,
   PackageVersion,
   VersionStatus,
-} from './schema.js';
+} from 'wc-org-shared/lib/schema.js';
 import {
   Module,
   Package as CustomElementsManifest,

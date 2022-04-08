@@ -1,6 +1,6 @@
 type Query {
   """
-  Retrieves currently indexed package metadata.
+  Retrieves currently indexed package metadata for all package versions.
   """
   package(packageName: String!): PackageInfo
 }
@@ -20,13 +20,25 @@ type PackageInfo {
 
   status: PackageStatus!
 
+  lastUpdate: Date!
+
   """
   The package description derived from the latest version
   """
   description: String
 
-  versions: [PackageVersion!]! @collection
-  # TODO: dist-tags
+  distTags: [DistTag!]!
+
+  """
+  Retreives a published versioned package. The default is "latest" for the
+  current version.
+  """
+  version(versionOrTag: String = "latest"): PackageVersion
+}
+
+type DistTag {
+  tag: String!
+  version: String!
 }
 
 """
@@ -49,6 +61,9 @@ in it was incorrect. Hopefully this never happens, but is included for
 completeness.
  - Errors, such as network failures. In these cases we should be able to
 retry fetching package metadata.
+
+TODO: we need time and possibly version associtated with the last impmort
+attempt.
 """
 enum PackageStatus {
   """
@@ -90,12 +105,20 @@ Information about a specific version of a package
 type PackageVersion {
   version: String!
 
+  """
+  The time this version was written to the registry
+  """
+  lastUpdate: Date!
+
   status: VersionStatus!
 
   description: String!
 
   author: String!
 
+  """
+  The package publication time reported by npm
+  """
   time: Date!
 
   homepage: String
@@ -104,7 +127,6 @@ type PackageVersion {
 
   customElementsManifest: String
 }
-
 
 enum VersionStatus {
   """
@@ -118,6 +140,7 @@ enum VersionStatus {
   READY
 
   """
+  A recoverable error.
   """
   ERROR
 }

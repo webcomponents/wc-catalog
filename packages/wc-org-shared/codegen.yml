@@ -13,3 +13,4 @@ generates:
       namingConvention: keep
       noSchemaStitching: true
       operationResultSuffix: Data
+      wrapFieldDefinitions: true

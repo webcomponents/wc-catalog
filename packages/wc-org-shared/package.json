@@ -1,0 +1,28 @@
+{
+  "name": "wc-org-shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared library for client and server",
+  "author": "Google LLC",
+  "homepage": "",
+  "license": "BSD-3-Clause",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run build:graphql && npm run build:ts && npm run build:copy",
+    "build:ts": "../../node_modules/.bin/tsc",
+    "build:copy": "cp -r out/{src,gen}/* .",
+    "build:graphql": "graphql-codegen -c codegen.yml",
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^2.6.2",
+    "@graphql-codegen/typed-document-node": "^2.2.8",
+    "@graphql-codegen/typescript": "^2.4.8",
+    "@graphql-codegen/typescript-resolvers": "^2.6.1"
+  },
+  "dependencies": {
+    "@graphql-tools/schema": "^8.3.6",
+    "graphql": "^16.3.0"
+  }
+}

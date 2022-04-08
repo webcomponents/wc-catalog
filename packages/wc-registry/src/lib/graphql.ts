@@ -5,16 +5,12 @@
  */
 
 import {readFile} from 'fs/promises';
-import {resolve, dirname} from 'path';
+import {createRequire} from 'module';
 import {makeExecutableSchema} from '@graphql-tools/schema';
 
-import type {Resolvers} from './schema.js';
-import {deletePackage, getPackageInfo, importPackage} from './firestore.js';
+const require = createRequire(import.meta.url);
 
-const schemaPath = resolve(
-  dirname(new URL(import.meta.url).pathname),
-  '../src/lib/schema.graphql'
-);
+const schemaPath = require.resolve('wc-org-shared/src/lib/schema.graphql');
 const schemaSource = await readFile(schemaPath, 'utf8');
 
 const resolvers: Resolvers = {
