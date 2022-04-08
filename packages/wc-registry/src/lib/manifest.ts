@@ -22,15 +22,15 @@ export type CustomElementInfo = {
 export const getCustomElements = (pkg: Package): Array<CustomElementInfo> => {
   const customElements: Array<CustomElementInfo> = [];
   for (const mod of pkg.modules) {
-    console.log('module', mod.path);
+    // console.log('module', mod.path);
     if (mod.exports) {
       for (const e of mod.exports) {
-        console.log('  export', e.kind, e.name);
+        // console.log('  export', e.kind, e.name);
         if (e.kind === 'custom-element-definition') {
           // TODO: for large manifests we want to index ahead of time to
           // avoid polynomial lookups
           const decl = resolveReference(pkg, mod, e.declaration);
-          console.log('    declaration', decl);
+          // console.log('    declaration', decl);
           if (decl?.kind === 'class') {
             customElements.push({
               package: pkg,
@@ -82,6 +82,6 @@ export const resolveReference = (
       }
     }
   }
-  console.warn("Can't find declaration", ref.name);
+  console.warn("Can't find declaration", ref.name, localModule.path);
   return undefined;
 };

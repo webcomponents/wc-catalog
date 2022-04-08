@@ -7,6 +7,13 @@
 import {readFile} from 'fs/promises';
 import {createRequire} from 'module';
 import {makeExecutableSchema} from '@graphql-tools/schema';
+import type {Resolvers} from 'wc-org-shared/lib/schema.js';
+import {
+  deletePackage,
+  getPackageInfo,
+  getPackageVersion,
+  importPackage,
+} from './firestore.js';
 
 const require = createRequire(import.meta.url);
 
@@ -21,9 +28,23 @@ const resolvers: Resolvers = {
       if (packageInfo !== undefined) {
         return packageInfo;
       } else {
-        console.log('package not found in db');
-        return importPackage(packageName);
+        console.log(`package ${packageName} not found in db`);
+        const packageInfo = await importPackage(packageName);
+        return packageInfo;
       }
+    },
+  },
+  PackageInfo: {
+    version: (packageInfo, {versionOrTag}, _context, _info) => {
+      console.log('PackageInfo version', packageInfo.name, versionOrTag);
+      const distTags = packageInfo.distTags;
+      const version =
+        distTags.find((distTag) => distTag.tag === versionOrTag)?.version ??
+        versionOrTag;
+      if (version === undefined) {
+        throw new Error(`tag ${packageInfo.name}@${versionOrTag} not found`);
+      }
+      return getPackageVersion(packageInfo.name, version);
     },
   },
   Mutation: {
@@ -34,6 +55,7 @@ const resolvers: Resolvers = {
     },
     async deletePackage(_parent, {packageName}: {packageName: string}) {
       console.log('mutation deletePackage', packageName);
+      // TODO: authentication and authorization!
       await deletePackage(packageName);
       return true;
     },

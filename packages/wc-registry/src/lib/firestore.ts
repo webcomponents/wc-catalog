@@ -8,6 +8,8 @@ import {
   DocumentData,
   FirestoreDataConverter,
   QueryDocumentSnapshot,
+  FieldValue,
+  Timestamp,
 } from '@google-cloud/firestore';
 import {Firestore} from '@google-cloud/firestore';
 import firebase from 'firebase-admin';
@@ -15,6 +17,7 @@ import {CustomElementInfo, getCustomElements} from './manifest.js';
 import {fetchCustomElementsManifest, fetchPackage, Package} from './npm.js';
 import {
   CustomElement,
+  DistTag,
   PackageInfo,
   PackageStatus,
   PackageVersion,
@@ -44,89 +47,23 @@ export const getPackageDocId = (packageName: string) =>
 export const getPackageName = (getPackageDocId: string) =>
   getPackageDocId.replaceAll('__', '/');
 
-// /**
-//  * The status of a package.
-//  *
-//  * Concurrent requests for package metadata, which may trigger fetching from
-//  * npm, are possible. We need to ensure there's only one writing request via
-//  * transactions that lock on the status field.
-//  *
-//  * Because packages have versions that update over a time, a package may have
-//  * a pending mutation task from initial fetching, or updating by querying and
-//  * fetching new version metadata.
-//  *
-//  * Packages may not exist, in which case we record that they're not found in
-//  * order to avoid flooding npm with invalid requests.
-//  *
-//  * Errors while fetching packages are divided into two categories:
-//  *  - Invalid packages for which we were able to fetch metadata, but something
-//  * in it was incorrect. Hopefully this never happens, but is included for
-//  * completeness.
-//  *  - Errors, such as network failures. In these cases we should be able to
-//  * retry fetching package metadata.
-//  */
-// export const PackageStatus = {
-//   /**
-//    * The package is being downloaded and indexed for the first time.
-//    */
-//   INITIALIZING: 1,
-
-//   /**
-//    * Packages may be read from, but there is a pending update task and
-//    * new versions of the package are being downloaded and indexed.
-//    */
-//   // UPDATING: 2,
-
-//   /**
-//    * The package is indexed and read to be read.
-//    */
-//   READY: 3,
-
-//   /**
-//    * The package was not found on npm
-//    */
-//   // NOT_FOUND: 4,
-
-//   /**
-//    * The package metadata was invalid. This is not a retryable error unless a
-//    * new package version is published.
-//    */
-//   // INVALID: 5,
-
-//   /**
-//    * A retryable error occured, such as network failure.
-//    */
-//   // ERROR: 6,
-// } as const;
-// export type PackageStatus = typeof PackageStatus[keyof typeof PackageStatus];
-
-// /**
-//  * The status of a package version.
-//  *
-//  * This is similar to the package status, except that package versions are
-//  * immutable and can never be updated.
-//  */
-// export const VersionStatus = {
-//   INITIALIZING: 1,
-//   READY: 2,
-//   // ERROR: 3,
-// } as const;
-// export type VersionStatus = typeof VersionStatus[keyof typeof VersionStatus];
-
-// export type PackageInfoFields = Omit<PackageInfo, 'versions'> & {
-//   status: PackageStatus;
-// };
 
 export const packageInfoConverter: FirestoreDataConverter<
-  Omit<PackageInfo, 'versions'>
+  Omit<PackageInfo, 'version'>
 > = {
   fromFirestore(
     snapshot: QueryDocumentSnapshot<DocumentData>
-  ): Omit<PackageInfo, 'versions'> {
+  ): Omit<PackageInfo, 'version'> {
+    const distTags = snapshot.get('distTags');
+    const graphQLDistTags = Object.entries(distTags).map(
+      ([tag, version]) => ({tag, version} as DistTag)
+    );
     return {
       name: snapshot.id,
+      lastUpdate: (snapshot.get('lastUpdate') as Timestamp).toDate(),
       status: snapshot.get('status'),
       description: snapshot.get('description'),
+      distTags: graphQLDistTags,
     };
   },
   toFirestore(_packageInfo: PackageInfo) {
@@ -134,15 +71,12 @@ export const packageInfoConverter: FirestoreDataConverter<
   },
 };
 
-// export type PackageVersionFields = PackageVersion & {
-//   status: VersionStatus;
-// };
-
 export const packageVersionConverter: FirestoreDataConverter<PackageVersion> = {
   fromFirestore(snapshot: QueryDocumentSnapshot<DocumentData>): PackageVersion {
     return {
       version: snapshot.id,
       status: snapshot.get('status'),
+      lastUpdate: (snapshot.get('lastUpdate') as Timestamp).toDate(),
       description: snapshot.get('description'),
       author: snapshot.get('author'),
       time: snapshot.get('time'),
@@ -170,6 +104,42 @@ export const customElementConverter: FirestoreDataConverter<CustomElement> = {
   },
 };
 
+/**
+ * Gets a PackageVersion object from the database, including all the
+ * custom elements exported by the package.
+ */
+export const getPackageVersion = async (
+  packageName: string,
+  version: string
+): Promise<PackageVersion> => {
+  const packageDocId = getPackageDocId(packageName);
+  const packageRef = db.collection('packages').doc(packageDocId);
+  const versionRef = packageRef.collection('versions').doc(version);
+  const versionDoc = await versionRef
+    .withConverter(packageVersionConverter)
+    .get();
+  const versionData = versionDoc.data();
+  if (versionData === undefined) {
+    throw new Error();
+  }
+  const customElementsRef = versionDoc.ref.collection('customElements');
+  const customElementsResults = await customElementsRef
+    .withConverter(customElementConverter)
+    .get();
+  const customElements: Array<CustomElement> = [];
+  (versionData as Mutable<PackageVersion, 'customElements'>).customElements =
+    customElements;
+  for (const customElementDoc of customElementsResults.docs) {
+    customElements.push(customElementDoc.data());
+  }
+  return versionData;
+};
+
+/**
+ * Gets the PackageInfo for a package, excluding package versions.
+ * 
+ * Currently only works for packages with a status of 
+ */
 export const getPackageInfo = async (
   packageName: string
 ): Promise<PackageInfo | undefined> => {
@@ -182,28 +152,7 @@ export const getPackageInfo = async (
     const status = packageInfo.status;
     switch (status) {
       case PackageStatus.READY: {
-        const versionsRef = packageRef.collection('versions');
-        const versionsResults = await versionsRef
-          .withConverter(packageVersionConverter)
-          .get();
-        const versions: Array<PackageVersion> = [];
-        for (const versionDoc of versionsResults.docs) {
-          const versionData = {...versionDoc.data()};
-          versions.push(versionData);
-          const customElementsRef = versionDoc.ref.collection('customElements');
-          const customElementsResults = await customElementsRef
-            .withConverter(customElementConverter)
-            .get();
-          const customElements: Array<CustomElement> = [];
-          versionData.customElements = customElements;
-          for (const customElementDoc of customElementsResults.docs) {
-            customElements.push(customElementDoc.data());
-          }
-        }
-        return {
-          ...packageInfo,
-          versions,
-        };
+        return packageInfo;
       }
       case PackageStatus.INITIALIZING:
       case PackageStatus.INVALID:
@@ -222,6 +171,11 @@ export const getPackageInfo = async (
   }
 };
 
+/**
+ * Imports a package from npm.
+ * 
+ * 
+ */
 export const importPackage = async (
   packageName: string
 ): Promise<PackageInfo> => {
@@ -230,20 +184,40 @@ export const importPackage = async (
 
   const [_createResult, npmPackage] = await Promise.all([
     // Mark package as initializing.
-    packageRef.create({status: PackageStatus.INITIALIZING}),
+    packageRef.create({
+      status: PackageStatus.INITIALIZING,
+      lastUpdate: FieldValue.serverTimestamp(),
+    }),
     await fetchPackage(packageName),
   ]);
 
   const versions = await importPackageVersions(packageName, npmPackage);
+  const distTags = npmPackage['dist-tags'];
+  const latestVersion = distTags['latest']!;
+  const latestVersionData = versions.find((v) => v.version === latestVersion);
 
   // Mark package as ready.
-  await packageRef.set({status: PackageStatus.READY});
-
-  return {
+  const readyResult = await packageRef.set({
     name: packageName,
+    lastUpdate: FieldValue.serverTimestamp(),
     status: PackageStatus.READY,
     description: 'TODO',
-    versions,
+    distTags,
+  });
+
+  // TODO: dedupe with the set() call above, maybe reuse the packageInfoConverter
+  const graphQLDistTags = Object.entries(distTags).map(([tag, version]) => ({
+    tag,
+    version,
+  }));
+  return {
+    name: packageName,
+    // Is this the same as the timestamp set in the create() call above?
+    lastUpdate: readyResult.writeTime,
+    status: PackageStatus.READY,
+    description: 'TODO',
+    distTags: graphQLDistTags,
+    version: latestVersionData,
   };
 };
 
@@ -268,6 +242,7 @@ const importPackageVersions = async (
 
       await versionRef.create({
         status: VersionStatus.INITIALIZING,
+        lastUpdate: FieldValue.serverTimestamp(),
         description: versionData.description ?? '',
         type: versionData.type ?? 'commonjs',
         // customElements: customElements ?? null,
@@ -286,18 +261,19 @@ const importPackageVersions = async (
         );
 
         if (customElementsManifest) {
-          console.log('found customElementsManifest', version);
+          // console.log('found customElementsManifest', version);
           customElementsManifestString = JSON.stringify(customElementsManifest);
           customElements = getCustomElements(customElementsManifest);
-          console.log('customElements', customElements);
+          // console.log('customElements', customElements);
         }
       }
 
       const versionTime = time[version];
 
       // Store version data and mark version as ready
-      await versionRef.set({
+      const readyResult = await versionRef.set({
         status: VersionStatus.READY,
+        lastUpdate: FieldValue.serverTimestamp(),
         description: versionData.description,
         author: versionData.author?.name ?? '',
         time: versionTime,
@@ -325,6 +301,7 @@ const importPackageVersions = async (
       versions.push({
         version,
         status: VersionStatus.READY,
+        lastUpdate: readyResult.writeTime,
         description: versionData.description,
         // type: versionData.type,
         author: versionData.author?.name ?? '',
@@ -367,4 +344,8 @@ export const deletePackage = async (packageName: string) => {
     await v.ref.delete();
   }
   await packageRef.delete();
+};
+
+type Mutable<T extends {[x: string]: any}, K extends string> = {
+  [P in K]: T[P];
 };

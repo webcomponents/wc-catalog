@@ -41,8 +41,6 @@ router.all('/graphql', async (context) => {
     const params = getGraphQLParameters(request);
     const {operationName, query, variables} = params;
 
-    console.log(params);
-
     const result = await processRequest({
       operationName,
       query,
@@ -50,8 +48,6 @@ router.all('/graphql', async (context) => {
       request,
       schema,
     });
-
-    console.log(result);
 
     if (result.type === 'RESPONSE') {
       result.headers.forEach(({name, value}) =>
