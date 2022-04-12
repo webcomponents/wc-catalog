@@ -14,3 +14,6 @@ generates:
       noSchemaStitching: true
       operationResultSuffix: Data
       wrapFieldDefinitions: true
+      scalars:
+        Date: Date
+        JSON: String

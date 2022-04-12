@@ -10,6 +10,7 @@ import {
   QueryDocumentSnapshot,
   FieldValue,
   Timestamp,
+  DocumentReference,
 } from '@google-cloud/firestore';
 import {Firestore} from '@google-cloud/firestore';
 import firebase from 'firebase-admin';
@@ -47,7 +48,6 @@ export const getPackageDocId = (packageName: string) =>
 export const getPackageName = (getPackageDocId: string) =>
   getPackageDocId.replaceAll('__', '/');
 
-
 export const packageInfoConverter: FirestoreDataConverter<
   Omit<PackageInfo, 'version'>
 > = {
@@ -74,9 +74,11 @@ export const packageInfoConverter: FirestoreDataConverter<
 export const packageVersionConverter: FirestoreDataConverter<PackageVersion> = {
   fromFirestore(snapshot: QueryDocumentSnapshot<DocumentData>): PackageVersion {
     return {
-      version: snapshot.id,
       status: snapshot.get('status'),
       lastUpdate: (snapshot.get('lastUpdate') as Timestamp).toDate(),
+      version: snapshot.id,
+      // TODO: convert from Map to list
+      distTags: snapshot.get('distTags'),
       description: snapshot.get('description'),
       type: snapshot.get('type'),
       author: snapshot.get('author'),
@@ -94,6 +96,11 @@ export const packageVersionConverter: FirestoreDataConverter<PackageVersion> = {
 export const customElementConverter: FirestoreDataConverter<CustomElement> = {
   fromFirestore(snapshot: QueryDocumentSnapshot<DocumentData>): CustomElement {
     return {
+      package: snapshot.get('package'),
+      version: snapshot.get('version'),
+      // TODO: convert from Map to list
+      distTags: snapshot.get('distTags'),
+      author: snapshot.get('author'),
       tagName: snapshot.get('tagName'),
       className: snapshot.get('className'),
       customElementExport: snapshot.get('customElementExport'),
@@ -114,7 +121,9 @@ export const getPackageVersion = async (
   version: string
 ): Promise<PackageVersion> => {
   const packageDocId = getPackageDocId(packageName);
-  const packageRef = db.collection('packages').doc(packageDocId);
+  const packageRef = db
+    .collection('packages')
+    .doc(packageDocId) as DocumentReference<PackageInfoData>;
   const versionRef = packageRef.collection('versions').doc(version);
   const versionDoc = await versionRef
     .withConverter(packageVersionConverter)
@@ -138,8 +147,8 @@ export const getPackageVersion = async (
 
 /**
  * Gets the PackageInfo for a package, excluding package versions.
- * 
- * Currently only works for packages with a status of 
+ *
+ * Currently only works for packages with a status of
  */
 export const getPackageInfo = async (
   packageName: string
@@ -174,18 +183,20 @@ export const getPackageInfo = async (
 
 /**
  * Imports a package from npm.
- * 
- * 
+ *
+ *
  */
 export const importPackage = async (
   packageName: string
 ): Promise<PackageInfo> => {
   const packageDocId = getPackageDocId(packageName);
-  const packageRef = db.collection('packages').doc(packageDocId);
+  const packageRef = db
+    .collection('packages')
+    .doc(packageDocId) as DocumentReference<PackageInfoData>;
 
   const [_createResult, npmPackage] = await Promise.all([
     // Mark package as initializing.
-    packageRef.create({
+    (packageRef as unknown as DocumentReference<PackageInfoStatus>).create({
       status: PackageStatus.INITIALIZING,
       lastUpdate: FieldValue.serverTimestamp(),
     }),
@@ -214,7 +225,7 @@ export const importPackage = async (
   return {
     name: packageName,
     // Is this the same as the timestamp set in the create() call above?
-    lastUpdate: readyResult.writeTime,
+    lastUpdate: readyResult.writeTime.toDate(),
     status: PackageStatus.READY,
     description: 'TODO',
     distTags: graphQLDistTags,
@@ -231,7 +242,6 @@ const importPackageVersions = async (
 
   const npmVersions = Object.entries(npmPackage.versions);
   const versions: Array<PackageVersion> = [];
-
 
   await Promise.all(
     npmVersions.map(async ([version, versionData]) => {
@@ -262,9 +272,13 @@ const importPackageVersions = async (
         }
       }
 
-      const packageTime = npmPackage.time[version];
+      const packageTime = npmPackage.time[version]!;
       const packageType = versionData.type ?? 'commonjs';
       const author = versionData.author?.name ?? '';
+      const distTags = npmPackage['dist-tags'];
+      const versionDistTags = Object.entries(distTags)
+        .filter(([, v]) => v === version)
+        .map(([t]) => t);
 
       // Store package data and mark version as ready
       // TODO: we want this type to match the schema and converter type. How do
@@ -272,9 +286,13 @@ const importPackageVersions = async (
       const readyResult = await versionRef.set({
         status: VersionStatus.READY,
         lastUpdate: FieldValue.serverTimestamp(),
+        // package: packageName,
+        version,
         description: versionData.description ?? '',
         type: packageType,
-        author: author,
+        distTags: versionDistTags,
+        author,
+        // TODO: convert to Timestamp
         time: packageTime,
         homepage: versionData.homepage ?? null,
         customElementsManifest: customElementsManifestString ?? null,
@@ -285,28 +303,44 @@ const importPackageVersions = async (
         const customElementsRef = versionRef.collection('customElements');
         for (const c of customElements) {
           const ceRef = customElementsRef.doc();
-          const customElement = customElementInfoToSchema(packageName, c);
+          // const customElement = customElementInfoToSchema(packageName, c);
           ceRef.set({
-            tagName: customElement.tagName,
-            className: customElement.className,
-            customElementExport: customElement.customElementExport,
-            jsExport: customElement.jsExport,
+            package: packageName,
+            version,
+            distTags: versionDistTags,
+            author,
+            tagName: c.export.name,
+            className: c.declaration.name,
+            customElementExport: referenceString(
+              packageName,
+              c.module,
+              c.export
+            ),
+            jsExport: referenceString(packageName, c.module, c.declaration),
           });
         }
       }
 
       versions.push({
-        version,
         status: VersionStatus.READY,
-        lastUpdate: readyResult.writeTime,
+        lastUpdate: readyResult.writeTime.toDate(),
+        version,
+        distTags: versionDistTags,
         description: versionData.description,
         type: packageType,
         author: author,
-        time: packageTime,
+        time: new Date(packageTime),
         homepage: versionData.homepage,
-        customElements: customElements?.map((c) =>
-          customElementInfoToSchema(packageName, c)
-        ),
+        customElements: customElements?.map((c) => ({
+          package: packageName,
+          version,
+          distTags: versionDistTags,
+          author,
+          tagName: c.export.name,
+          className: c.declaration.name,
+          customElementExport: referenceString(packageName, c.module, c.export),
+          jsExport: referenceString(packageName, c.module, c.declaration),
+        })),
         customElementsManifest: customElementsManifestString,
       });
     })
@@ -315,18 +349,18 @@ const importPackageVersions = async (
   return versions;
 };
 
-const customElementInfoToSchema = (
-  packageName: string,
-  info: CustomElementInfo
-): CustomElement => {
-  return {
-    tagName: info.export.name,
-    className: info.declaration.name,
-    customElementExport: referenceString(packageName, info.module, info.export),
-    jsExport: referenceString(packageName, info.module, info.declaration),
-    // declaration: info.,
-  };
-};
+// const customElementInfoToSchema = (
+//   packageName: string,
+//   info: CustomElementInfo
+// ): CustomElement => {
+//   return {
+//     tagName: info.export.name,
+//     className: info.declaration.name,
+//     customElementExport: referenceString(packageName, info.module, info.export),
+//     jsExport: referenceString(packageName, info.module, info.declaration),
+//     // declaration: info.,
+//   };
+// };
 
 const referenceString = (packageName: string, mod: Module, ref: Reference) => {
   return `${packageName}/${mod.path}#${ref.name}`;
@@ -343,6 +377,65 @@ export const deletePackage = async (packageName: string) => {
   await packageRef.delete();
 };
 
+export const getElements = async (): Promise<CustomElement[]> => {
+  const elementsRef = db.collectionGroup('customElements');
+  const elements = await elementsRef
+    .withConverter(customElementConverter)
+    .get();
+  return elements.docs.map((d) => {
+    console.log('custom element', d.ref.path);
+    return d.data();
+  });
+};
+
 type Mutable<T extends {[x: string]: any}, K extends string> = {
   [P in K]: T[P];
 };
+
+/**
+ * Generates a type representing a Firestore document from a GraphQL schema
+ * type.
+ *
+ *  - Removes __typename
+ *  - Date -> Timestamp
+ *  - Removes specified collection fields
+ *  - Transforms list of tuples to maps
+ */
+type FirestoreType<
+  SchemaType,
+  MapFields extends {[k: string]: string},
+  Collections extends string
+> = {
+  [K in keyof SchemaType]: K extends '__typename'
+    ? never
+    : K extends Date
+    ? Timestamp
+    : K extends keyof MapFields
+    ? {
+        [key: string]: MapFields[K] extends string
+          ? SchemaType[K] extends ReadonlyArray<infer T>
+            ? Omit<T, MapFields[K]>
+            : never
+          : MapFields[K];
+      }
+    : K extends Collections
+    ? never
+    : SchemaType[K];
+};
+
+/**
+ * Subset of fields usable for initial Firestore create() calls.
+ */
+type PackageInfoStatus = {
+  status: string;
+  lastUpdate: Timestamp;
+};
+
+/**
+ * Firestore DocumentData for PackageInfo documents.
+ */
+type PackageInfoData = FirestoreType<
+  PackageInfo,
+  {distTags: string},
+  'version'
+>;

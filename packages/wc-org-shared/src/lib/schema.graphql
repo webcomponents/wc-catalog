@@ -3,6 +3,15 @@ type Query {
   Retrieves currently indexed package metadata for all package versions.
   """
   package(packageName: String!): PackageInfo
+
+  """
+  Queries custom elements in the entire catalog, from the latest version of each
+  package.
+
+  Eventually this will use some sort of ranking algorithm, otherwise the order
+  will just be defined by the database implementation.
+  """
+  elements(limit: Int): [CustomElement!]!
 }
 
 type Mutation {
@@ -27,13 +36,16 @@ type PackageInfo {
   """
   description: String
 
-  distTags: [DistTag!]!
+  """
+  The dist tag mappings for the package.
+  """
+  distTags: [DistTag!]! @map
 
   """
   Retreives a published versioned package. The default is "latest" for the
   current version.
   """
-  version(versionOrTag: String = "latest"): PackageVersion
+  version(versionOrTag: String = "latest"): PackageVersion @collection
 }
 
 type DistTag {
@@ -106,6 +118,11 @@ type PackageVersion {
   version: String!
 
   """
+  The dist tags assigned to this version
+  """
+  distTags: [String!]!
+
+  """
   The time this version was written to the registry
   """
   lastUpdate: Date!
@@ -155,6 +172,24 @@ Holds important per-element data extracted from the exports of the
 package's custom elements manifest.
 """
 type CustomElement {
+
+  """
+  The package name containing this element
+  """
+  package: String!
+
+  """
+  The package version containing this element
+  """
+  version: String!
+
+  """
+  The dist tags assigned to this version
+  """
+  distTags: [String!]!
+
+  author: String!
+
   tagName: String
 
   className: String
@@ -180,3 +215,5 @@ scalar Date
 scalar JSON
 
 directive @collection on FIELD_DEFINITION
+
+directive @map on FIELD_DEFINITION
