@@ -27,7 +27,7 @@
     "@graphql-codegen/typescript-resolvers": "^2.6.1",
     "@types/npm-registry-fetch": "^8.0.0",
     "@types/source-map-support": "^0.5.3",
-    "firebase-tools": "^10.6.0",
+    "firebase-tools": "^11.3.0",
     "source-map-support": "^0.5.19"
   },
   "dependencies": {
