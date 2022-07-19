@@ -11,7 +11,7 @@ type Query {
   Eventually this will use some sort of ranking algorithm, otherwise the order
   will just be defined by the database implementation.
   """
-  elements(limit: Int): [CustomElement!]!
+  elements(tag: String = "latest", limit: Int): [CustomElement!]!
 }
 
 type Mutation {

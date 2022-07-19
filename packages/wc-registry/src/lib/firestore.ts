@@ -11,6 +11,7 @@ import {
   FieldValue,
   Timestamp,
   DocumentReference,
+  Query,
 } from '@google-cloud/firestore';
 import {Firestore} from '@google-cloud/firestore';
 import firebase from 'firebase-admin';
@@ -377,11 +378,17 @@ export const deletePackage = async (packageName: string) => {
   await packageRef.delete();
 };
 
-export const getElements = async (): Promise<CustomElement[]> => {
+export const getElements = async ({tag, limit}: {tag?: string|null, limit?: number|null}): Promise<CustomElement[]> => {
   const elementsRef = db.collectionGroup('customElements');
-  const elements = await elementsRef
+  let elementsQuery: Query<CustomElement> = elementsRef
     .withConverter(customElementConverter)
-    .get();
+  if (tag) {
+    elementsQuery = elementsQuery.where('distTags', 'array-contains', tag);
+  }
+  if (limit) {
+    elementsQuery = elementsQuery.limit(limit);
+  }
+  const elements = await elementsQuery.get();
   return elements.docs.map((d) => {
     console.log('custom element', d.ref.path);
     return d.data();

@@ -47,6 +47,7 @@
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0",
     "node-fetch": "^3.2.3",
-    "npm-registry-fetch": "^13.1.0"
+    "npm-registry-fetch": "^13.1.0",
+    "wc-org-shared": "0.0.0"
   }
 }

@@ -34,8 +34,8 @@ const resolvers: Resolvers = {
         return packageInfo;
       }
     },
-    async elements() {
-      return getElements();
+    async elements(_parent, {tag, limit}: {tag?: string|null, limit?: number|null}) {
+      return getElements({tag, limit});
     }
   },
   PackageInfo: {
