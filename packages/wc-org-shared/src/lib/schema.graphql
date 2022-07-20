@@ -12,6 +12,8 @@ type Query {
   will just be defined by the database implementation.
   """
   elements(tag: String = "latest", limit: Int): [CustomElement!]!
+
+  element(packageName: String!, elementName: String!, tag: String = "latest"): CustomElement
 }
 
 type Mutation {

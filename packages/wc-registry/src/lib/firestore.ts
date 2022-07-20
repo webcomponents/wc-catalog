@@ -149,7 +149,7 @@ export const getPackageVersion = async (
 /**
  * Gets the PackageInfo for a package, excluding package versions.
  *
- * Currently only works for packages with a status of
+ * Currently only works for packages with a status of READY
  */
 export const getPackageInfo = async (
   packageName: string
@@ -378,10 +378,17 @@ export const deletePackage = async (packageName: string) => {
   await packageRef.delete();
 };
 
-export const getElements = async ({tag, limit}: {tag?: string|null, limit?: number|null}): Promise<CustomElement[]> => {
+export const getElements = async ({
+  tag,
+  limit,
+}: {
+  tag?: string | null;
+  limit?: number | null;
+}): Promise<CustomElement[]> => {
   const elementsRef = db.collectionGroup('customElements');
-  let elementsQuery: Query<CustomElement> = elementsRef
-    .withConverter(customElementConverter)
+  let elementsQuery: Query<CustomElement> = elementsRef.withConverter(
+    customElementConverter
+  );
   if (tag) {
     elementsQuery = elementsQuery.where('distTags', 'array-contains', tag);
   }
@@ -393,6 +400,35 @@ export const getElements = async ({tag, limit}: {tag?: string|null, limit?: numb
     console.log('custom element', d.ref.path);
     return d.data();
   });
+};
+
+export const getElement = async ({
+  packageName,
+  elementName,
+  tag,
+}: {
+  packageName: string;
+  elementName: string;
+  tag?: string | null;
+  limit?: number | null;
+}): Promise<CustomElement> => {
+  const elementsRef = db.collectionGroup('customElements');
+  let elementsQuery: Query<CustomElement> = elementsRef
+    .withConverter(customElementConverter)
+    .where('package', '==', packageName)
+    .where('tagName', '==', elementName)
+    .where('distTags', 'array-contains', tag ?? 'latest');
+
+  const elements = await elementsQuery.get();
+  if (elements.size === 0) {
+    throw new Error(`Not found`);
+  }
+  if (elements.size > 1) {
+    throw new Error(`More than one result: ${elements.size}`);
+  }
+  const elementDoc = elements.docs[0]!;
+  console.log('custom element', elementDoc.ref.path);
+  return elementDoc.data();
 };
 
 type Mutable<T extends {[x: string]: any}, K extends string> = {

@@ -10,6 +10,7 @@ import {makeExecutableSchema} from '@graphql-tools/schema';
 import type {Resolvers} from 'wc-org-shared/lib/schema.js';
 import {
   deletePackage,
+  getElement,
   getElements,
   getPackageInfo,
   getPackageVersion,
@@ -36,6 +37,9 @@ const resolvers: Resolvers = {
     },
     async elements(_parent, {tag, limit}: {tag?: string|null, limit?: number|null}) {
       return getElements({tag, limit});
+    },
+    async element(_parent, {packageName, elementName, tag}: {packageName: string, elementName: string, tag: string}) {
+      return getElement({packageName, elementName, tag});
     }
   },
   PackageInfo: {

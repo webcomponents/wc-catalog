@@ -58,13 +58,13 @@ We end up with a hierarchy like:
 
 `Package` -> `versions` -> `PackageVersion` -> `customElements` -> `CustomElement`
 
-Only one of the `PackageVersion` documents represents the latest versino of a package. Queries will generally be performed against the lastest versions. Other versions will be available for documentation.
+Only one of the `PackageVersion` documents represents the latest version of a package. Queries will generally be performed against the lastest versions. Other versions will be available for documentation.
 
 #### Collections
 
-Since ollections don't neccesaarily correspond to packages, we will have a separate root collection to represent collections.
+Since ollections don't neccesaarily correspond to packages, we will have a separate root Firestore collection to represent element collections.
 
-A simple representation of a collection would be a list of elements that belong to it. For this we need a way to reference an element. Package and custom element name works if element names are unique per package, which they should be.
+A simple representation of a collection would be a list of elements that belong to it. For this we need a way to reference an element. Package and custom element name works if element names are unique per package, which they should be. See [Identifying Elements](#identifying-elements).
 
 So one optiion for a collection schema is:
 
@@ -121,6 +121,32 @@ A filtered version of the above query, queryable on any of the fields in `Custom
 #### Get collections
 
 #### Get authors
+
+### Identifying Elements
+
+In several places, like URLs and cross-references from collections, we will need a way to refer to an element.
+
+Packages are not actually organized by element, they are organized by modules. Yet it's common and easy for users to refer to an element from a package, regarless of which module the element is exported from.
+
+To be convenient, we can form element identifiers from a package-name/element-name combination. If for some reason an element name is used more than once in a package (other than re-exporting it) we can add a disambiguation token, or allow the element to be referred from by module.
+
+For instance, we might have a URL to a catalog page for `@shoelace-style/shoelace/sl-button` like:
+
+`webcomponents.org/catalog/element/@shoelace-style/shoelace/sl-button/`
+
+If there are two `sl-button`s in the `@shoelace-style/shoelace` package, we can refer to the second (determined by some heuristic) like:
+
+`webcomponents.org/catalog/element/@shoelace-style/shoelace/sl-button/2`.
+
+This case should be rare since there will usually only be one "custom element export" (the `customElements.define()` or `@customElement()` call) for an element in a package.
+
+We can also refer to elements via their full package/module path:
+
+`webcomponents.org/catalog/package/@shoelace-style/shoelace/dist/components/button/button.js#sl-button`.
+
+Package versions will be encoded into the package name:
+
+`webcomponents.org/catalog/package/@shoelace-style/shoelace@2.0.0-beta.78/...`.
 
 ### Requirements for Inclusion in the catalog
 
