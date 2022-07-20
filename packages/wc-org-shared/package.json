@@ -9,11 +9,50 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "build": "npm run build:graphql && npm run build:ts && npm run build:copy",
-    "build:ts": "../../node_modules/.bin/tsc",
-    "build:copy": "cp -r out/{src,gen}/* .",
-    "build:graphql": "graphql-codegen -c codegen.yml",
-    "test": "echo \"Error: run tests from root\" && exit 1"
+    "build": "wireit",
+    "build:ts": "wireit",
+    "build:graphql": "wireit"
+  },
+  "wireit": {
+    "build": {
+      "command": "cp -r out/{src,gen}/* .",
+      "dependencies": [
+        "build:graphql",
+        "build:ts"
+      ],
+      "files": [
+        "out"
+      ],
+      "output": [
+        "lib",
+        "index.{js,js.map,d.ts,d.ts.map}"
+      ],
+      "clean": "if-file-deleted"
+    },
+    "build:ts": {
+      "command": "../../node_modules/.bin/tsc",
+      "files": [
+        "tsconfig.json",
+        "src/**/*.ts",
+        "gen/**/*.ts"
+      ],
+      "output": [
+        "out",
+        "tsconfig.tsbuildinfo"
+      ],
+      "clean": "if-file-deleted"
+    },
+    "build:graphql": {
+      "command": "graphql-codegen -c codegen.yml",
+      "files": [
+        "codegen.yml",
+        "src/lib/schema.graphql"
+      ],
+      "output": [
+        "gen/lib/schema.ts"
+      ],
+      "clean": "if-file-deleted"
+    }
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^2.6.2",

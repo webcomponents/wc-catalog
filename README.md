@@ -12,11 +12,9 @@ This repo will contain several packages:
 
 ```bash
 npm ci
-npm run bootstrap
 cd packages/wc-registry
 npm run build
 npm run emulators:start & npm run dev
 ```
 
 This starts a GraphQL service. The web server only serves a simple welcome page and an interactive GraphiQL editor at `/graphql`.
-
