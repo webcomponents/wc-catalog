@@ -36,6 +36,9 @@
         ".eleventy.cjs",
         "site"
       ],
+      "output": [
+        "_site"
+      ],
       "clean": "if-file-deleted"
     }
   },

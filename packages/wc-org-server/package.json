@@ -1,0 +1,58 @@
+{
+  "name": "wc-org-server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The webcomponents.org server",
+  "author": "Google LLC",
+  "homepage": "",
+  "license": "BSD-3-Clause",
+  "type": "module",
+  "main": "index.js",
+  "files": [
+    "lib",
+    "index.{d.ts,d.ts.map,js,js.map}"
+  ],
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node dev.js",
+    "build": "wireit"
+  },
+  "wireit": {
+    "build": {
+      "command": "../../node_modules/.bin/tsc",
+      "dependencies": [
+        "../wc-org-shared:build",
+        "../wc-org-content:build",
+        "../wc-registry:build"
+      ],
+      "files": [
+        "tsconfig.json",
+        "src/**/*.ts"
+      ],
+      "output": [
+        "lib",
+        "index.{js,js.map,d.ts,d.ts.map}",
+        "dev.{js,js.map,d.ts,d.ts.map}",
+        "tsconfig.tsbuildinfo"
+      ],
+      "clean": "if-file-deleted"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.6",
+    "@web/dev-server": "^0.1.32"
+  },
+  "dependencies": {
+    "@koa/router": "^12.0.0",
+    "@types/koa": "^2.13.1",
+    "@types/koa__router": "^8.0.4",
+    "@types/koa-bodyparser": "^4.3.1",
+    "custom-elements-manifest": "^1.0.0",
+    "graphql": "^16.3.0",
+    "koa": "^2.13.1",
+    "koa-bodyparser": "^4.3.0",
+    "node-fetch": "^3.2.3",
+    "npm-registry-fetch": "^13.1.0",
+    "wc-org-shared": "0.0.0"
+  }
+}

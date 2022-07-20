@@ -2,11 +2,12 @@
 
 A new implementation of the webcompoents.org site
 
-This repo will contain several packages:
+This repo contains several packages:
 
-- A data-only backend that indexes npm packages and provides a GraphQL API into the database
-- A frontend server that serves the user-facing webcompoents.org site
-- An HTML client served by the frontend server
+- `wc-registry`: A data-only backend that indexes npm packages and provides a GraphQL API into the database
+- `wc-org-server`: A frontend server that serves the user-facing webcompoents.org site
+- `wc-org-content`: An HTML client served by the frontend server
+- `wc-org-shared`: Shared libraries, like GraphQL schemas.
 
 ## Quick Start
 
