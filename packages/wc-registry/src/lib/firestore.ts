@@ -12,10 +12,14 @@ import {
   Timestamp,
   DocumentReference,
   Query,
+  CollectionReference,
 } from '@google-cloud/firestore';
 import {Firestore} from '@google-cloud/firestore';
 import firebase from 'firebase-admin';
-import {CustomElementInfo, getCustomElements} from './manifest.js';
+import {
+  CustomElementInfo,
+  getCustomElements as getCustomElementsFromManifest,
+} from 'wc-org-shared/lib/manifest/utils.js';
 import {fetchCustomElementsManifest, fetchPackage, Package} from './npm.js';
 import {
   CustomElement,
@@ -120,7 +124,7 @@ export const customElementConverter: FirestoreDataConverter<CustomElement> = {
 export const getPackageVersion = async (
   packageName: string,
   version: string
-): Promise<PackageVersion> => {
+): Promise<PackageVersion | undefined> => {
   const packageDocId = getPackageDocId(packageName);
   const packageRef = db
     .collection('packages')
@@ -129,21 +133,30 @@ export const getPackageVersion = async (
   const versionDoc = await versionRef
     .withConverter(packageVersionConverter)
     .get();
-  const versionData = versionDoc.data();
-  if (versionData === undefined) {
-    throw new Error();
+  return versionDoc.data();
+};
+
+export const getCustomElements = async (
+  packageName: string,
+  version: string,
+  tagName?: string
+): Promise<CustomElement[]> => {
+  const packageDocId = getPackageDocId(packageName);
+  const packageRef = db
+    .collection('packages')
+    .doc(packageDocId) as DocumentReference<PackageInfoData>;
+  const versionRef = packageRef.collection('versions').doc(version);
+  const customElementsRef = versionRef.collection('customElements');
+  let customElementsQuery:
+    | CollectionReference<CustomElement>
+    | Query<CustomElement> = customElementsRef.withConverter(
+    customElementConverter
+  );
+  if (tagName !== undefined) {
+    customElementsQuery = customElementsQuery.where('tagName', '==', tagName);
   }
-  const customElementsRef = versionDoc.ref.collection('customElements');
-  const customElementsResults = await customElementsRef
-    .withConverter(customElementConverter)
-    .get();
-  const customElements: Array<CustomElement> = [];
-  (versionData as Mutable<PackageVersion, 'customElements'>).customElements =
-    customElements;
-  for (const customElementDoc of customElementsResults.docs) {
-    customElements.push(customElementDoc.data());
-  }
-  return versionData;
+  const customElementsResults = await customElementsQuery.get();
+  return customElementsResults.docs.map((d) => d.data());
 };
 
 /**
@@ -269,7 +282,9 @@ const importPackageVersions = async (
 
         if (customElementsManifest) {
           customElementsManifestString = JSON.stringify(customElementsManifest);
-          customElements = getCustomElements(customElementsManifest);
+          customElements = getCustomElementsFromManifest(
+            customElementsManifest
+          );
         }
       }
 
@@ -431,9 +446,9 @@ export const getElement = async ({
   return elementDoc.data();
 };
 
-type Mutable<T extends {[x: string]: any}, K extends string> = {
-  [P in K]: T[P];
-};
+// type Mutable<T extends {[x: string]: any}, K extends string> = {
+//   [P in K]: T[P];
+// };
 
 /**
  * Generates a type representing a Firestore document from a GraphQL schema

@@ -10,6 +10,7 @@ import {makeExecutableSchema} from '@graphql-tools/schema';
 import type {Resolvers} from 'wc-org-shared/lib/schema.js';
 import {
   deletePackage,
+  getCustomElements,
   getElement,
   getElements,
   getPackageInfo,
@@ -43,16 +44,33 @@ const resolvers: Resolvers = {
     }
   },
   PackageInfo: {
-    version: (packageInfo, {versionOrTag}, _context, _info) => {
+    version: async (packageInfo, {versionOrTag}, context, _info) => {
+      // TODO(justinfagnani): strongly type context?
+      context.packageName = packageInfo.name;
       console.log('PackageInfo version', packageInfo.name, versionOrTag);
+
+      // Check to see if versionOrTag is a distTag
       const distTags = packageInfo.distTags;
       const version =
         distTags.find((distTag) => distTag.tag === versionOrTag)?.version ??
         versionOrTag;
-      if (version === undefined) {
+        
+      const packageVersion = await getPackageVersion(packageInfo.name, version);
+      if (packageVersion === undefined) {
         throw new Error(`tag ${packageInfo.name}@${versionOrTag} not found`);
       }
-      return getPackageVersion(packageInfo.name, version);
+      return packageVersion;
+    },
+  },
+  PackageVersion: {
+    customElements: async (packageVersion, {tagName}: {tagName?: string | null}, context, _info) => {
+      const packageName = context.packageName;
+      // console.log('tagName', tagName);
+      // console.log(_info.path.prev);
+      // console.log('packageVersion', packageVersion);
+      // console.log('_context', _context);
+      // console.log('_info', _info);
+      return getCustomElements(packageName, packageVersion.version, tagName ?? undefined);
     },
   },
   Mutation: {

@@ -4,13 +4,15 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import {
+ import {
   CustomElementDeclaration,
   CustomElementExport,
   Module,
   Package,
   Reference,
 } from 'custom-elements-manifest/schema';
+
+export * from 'custom-elements-manifest/schema';
 
 export type CustomElementInfo = {
   package: Package;
@@ -44,6 +46,32 @@ export const getCustomElements = (pkg: Package): Array<CustomElementInfo> => {
     }
   }
   return customElements;
+};
+
+export const getModule = (pkg: Package, packageName: string, path: string) => {
+  if (path.startsWith('/') || path.startsWith('.')) {
+    // package local path
+    throw new Error('Not implemented');
+  } else {
+    const pathSegments = path!.split('/');
+    const isScoped = pathSegments[0]?.startsWith('@');
+    const modulePackageName = isScoped
+      ? pathSegments[0] + '/' + pathSegments[1]
+      : pathSegments[0]!;
+    const modulePath = path.substring(modulePackageName.length);
+
+    if (modulePackageName !== packageName) {
+      throw new Error(`Incorrect package: expected ${packageName}, got ${modulePath}`);
+    }
+
+    for (const mod of pkg.modules) {
+      // TODO: do we need to normalize paths?
+      if (mod.path === modulePath) {
+        return mod;
+      }
+    }
+  }
+  return undefined;
 };
 
 export const resolveReference = (

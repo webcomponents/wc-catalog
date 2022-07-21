@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "start": "node index.js",
-    "dev": "node dev.js",
+    "dev": "node --enable-source-maps dev.js",
     "build": "wireit"
   },
   "wireit": {
@@ -54,6 +54,7 @@
     "koa-bodyparser": "^4.3.0",
     "node-fetch": "^3.2.3",
     "npm-registry-fetch": "^13.1.0",
+    "wc-org-content": "0.0.0",
     "wc-org-shared": "0.0.0"
   }
 }

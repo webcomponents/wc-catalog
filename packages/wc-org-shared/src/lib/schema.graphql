@@ -147,7 +147,7 @@ type PackageVersion {
 
   homepage: String
 
-  customElements: [CustomElement!]
+  customElements(tagName: String): [CustomElement!]
 
   customElementsManifest: String
 }

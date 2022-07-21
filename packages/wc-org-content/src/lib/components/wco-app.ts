@@ -6,7 +6,7 @@ import './wco-card.js';
 import './wco-catalog-embed.js';
 import './wco-support-table.js';
 
-@customElement('sco-app')
+@customElement('wco-app')
 export class WCOAppElement extends LitElement {
   static styles = [catalogStyles, css`
     :host {

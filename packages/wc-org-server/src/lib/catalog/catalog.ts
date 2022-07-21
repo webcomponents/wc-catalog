@@ -2,6 +2,8 @@
 // import {createRequire} from 'module';
 import Router from '@koa/router';
 import apolloClient from '@apollo/client/core/core.cjs';
+import baseLayout from 'wc-org-content/site/_includes/layouts/base.11ty.cjs';
+import {renderElement} from './elementTemplate.js';
 
 const {ApolloClient, InMemoryCache, gql} = apolloClient;
 
@@ -30,24 +32,55 @@ catalogRouter.get('/element/:path+', async (context) => {
   const result = await client.query({
     query: gql`
       {
-        element(
-          packageName: "${packageName}"
-          elementName: "${elementName}"
-        ) {
-          tagName
-          className
-          customElementExport
+        package(packageName: "${packageName}") {
+          name
+          description
+          version {
+            version
+            description
+            customElements(tagName: "${elementName}") {
+              tagName
+              declaration
+              customElementExport
+              jsExport
+            }
+            customElementsManifest
+          }
         }
       }
     `,
   });
 
-  const data = result.data;
+  if (result.errors !== undefined && result.errors.length > 0) {
+    throw new Error(result.errors.map((e) => e.message).join('\n'));
+  }
+  const {data} = result;
 
-  context.body = `
-    <h1>Element: ${packageName}/${elementName}</h1>
-    <pre>${JSON.stringify(data)}</pre>
-  `;
+  const customElementsManifest =
+    data.package?.version?.customElementsManifest !== undefined &&
+    JSON.parse(data.package?.version?.customElementsManifest);
+
+  const page = baseLayout.render({
+    title: 'Catalog',
+    content: renderElement({
+      packageName: packageName!,
+      elementName: elementName!,
+      manifest: customElementsManifest,
+    }),
+  });
+
+  // console.log('page', page);
+  context.body = page;
   context.type = 'html';
   context.status = 200;
 });
+
+// const replacements: Record<string, string> = {
+//   '<': '&lt;',
+//   '>': '&gt;',
+//   '&': '&amp;',
+//   "'": '&#39;',
+//   '"': '&quot;',
+// };
+// const replacer = (s: string) => replacements[s]!;
+// const escapeHTML = (html: string) => html.replaceAll(/[<>&'"]/g, replacer);

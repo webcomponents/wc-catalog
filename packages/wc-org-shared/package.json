@@ -21,7 +21,7 @@
         "build:ts"
       ],
       "files": [
-        "out"
+        "out/"
       ],
       "output": [
         "lib",
@@ -31,13 +31,16 @@
     },
     "build:ts": {
       "command": "../../node_modules/.bin/tsc",
+      "dependencies": [
+        "build:graphql"
+      ],
       "files": [
         "tsconfig.json",
         "src/**/*.ts",
         "gen/**/*.ts"
       ],
       "output": [
-        "out",
+        "out/",
         "tsconfig.tsbuildinfo"
       ],
       "clean": "if-file-deleted"
@@ -62,6 +65,7 @@
   },
   "dependencies": {
     "@graphql-tools/schema": "^8.3.6",
+    "custom-elements-manifest": "^1.0.0",
     "graphql": "^16.3.0"
   }
 }
