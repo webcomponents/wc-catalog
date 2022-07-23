@@ -7,7 +7,7 @@
     "./packages/*"
   ],
   "scripts": {
-    "format": "prettier ./packages/*/src/**/*.ts --write"
+    "format": "prettier \"./packages/*/src/**/*.ts\" --write"
   },
   "license": "BSD-3-Clause",
   "devDependencies": {

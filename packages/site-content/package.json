@@ -1,0 +1,58 @@
+{
+  "name": "@webcomponents/site-content",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "wireit",
+    "build:ts": "wireit",
+    "build:site": "wireit",
+    "dev:serve": "wds --node-resolve --root-dir=./_site"
+  },
+  "wireit": {
+    "build": {
+      "dependencies": [
+        "build:ts",
+        "build:site"
+      ]
+    },
+    "build:ts": {
+      "command": "../../node_modules/.bin/tsc",
+      "files": [
+        "tsonfig.json",
+        "src/**/*.ts"
+      ],
+      "output": [
+        "lib",
+        "tsconfig.tsbuildinfo"
+      ],
+      "clean": "if-file-deleted"
+    },
+    "build:site": {
+      "command": "eleventy --config=.eleventy.cjs",
+      "files": [
+        ".eleventy.cjs",
+        "site"
+      ],
+      "output": [
+        "_site"
+      ],
+      "clean": "if-file-deleted"
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "devDependencies": {
+    "@11ty/eleventy": "^1.0.0",
+    "@web/dev-server": "^0.1.30"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.5.10",
+    "@material/mwc-textarea": "^0.26.1",
+    "@material/mwc-textfield": "^0.26.1",
+    "@material/mwc-top-app-bar": "^0.26.1",
+    "lit": "^2.2.1"
+  }
+}
