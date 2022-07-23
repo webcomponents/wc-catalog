@@ -13,7 +13,7 @@
     "index.{d.ts,d.ts.map,js,js.map}"
   ],
   "scripts": {
-    "start": "node index.js",
+    "start": "node --enable-source-maps index.js",
     "dev": "FIRESTORE_EMULATOR_HOST=localhost:8088 npm start",
     "build": "wireit",
     "emulators:start": "firebase emulators:start --project wc-catalog",

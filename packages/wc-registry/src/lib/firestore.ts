@@ -19,6 +19,7 @@ import firebase from 'firebase-admin';
 import {
   CustomElementInfo,
   getCustomElements as getCustomElementsFromManifest,
+  referenceString,
 } from 'wc-org-shared/lib/manifest/utils.js';
 import {fetchCustomElementsManifest, fetchPackage, Package} from './npm.js';
 import {
@@ -29,11 +30,7 @@ import {
   PackageVersion,
   VersionStatus,
 } from 'wc-org-shared/lib/schema.js';
-import {
-  Module,
-  Package as CustomElementsManifest,
-  Reference,
-} from 'custom-elements-manifest/schema';
+import type {Package as CustomElementsManifest} from 'custom-elements-manifest/schema';
 
 const projectId = 'wc-catalog';
 
@@ -109,7 +106,7 @@ export const customElementConverter: FirestoreDataConverter<CustomElement> = {
       tagName: snapshot.get('tagName'),
       className: snapshot.get('className'),
       customElementExport: snapshot.get('customElementExport'),
-      jsExport: snapshot.get('jsExport'),
+      declaration: snapshot.get('declaration'),
     };
   },
   toFirestore(_packageInfo: CustomElement) {
@@ -168,7 +165,7 @@ export const getPackageInfo = async (
   packageName: string
 ): Promise<PackageInfo | undefined> => {
   const packageDocId = getPackageDocId(packageName);
-  // console.log('packageInfo', packageName, packageDocId);
+  console.log('packageInfo', packageName, packageDocId);
   const packageRef = db.collection('packages').doc(packageDocId);
   const packageDoc = await packageRef.withConverter(packageInfoConverter).get();
   if (packageDoc.exists) {
@@ -197,8 +194,6 @@ export const getPackageInfo = async (
 
 /**
  * Imports a package from npm.
- *
- *
  */
 export const importPackage = async (
   packageName: string
@@ -283,7 +278,9 @@ const importPackageVersions = async (
         if (customElementsManifest) {
           customElementsManifestString = JSON.stringify(customElementsManifest);
           customElements = getCustomElementsFromManifest(
-            customElementsManifest
+            customElementsManifest,
+            packageName,
+            version
           );
         }
       }
@@ -332,7 +329,7 @@ const importPackageVersions = async (
               c.module,
               c.export
             ),
-            jsExport: referenceString(packageName, c.module, c.declaration),
+            declaration: referenceString(packageName, c.module, c.declaration),
           });
         }
       }
@@ -355,7 +352,7 @@ const importPackageVersions = async (
           tagName: c.export.name,
           className: c.declaration.name,
           customElementExport: referenceString(packageName, c.module, c.export),
-          jsExport: referenceString(packageName, c.module, c.declaration),
+          declaration: referenceString(packageName, c.module, c.declaration),
         })),
         customElementsManifest: customElementsManifestString,
       });
@@ -377,10 +374,6 @@ const importPackageVersions = async (
 //     // declaration: info.,
 //   };
 // };
-
-const referenceString = (packageName: string, mod: Module, ref: Reference) => {
-  return `${packageName}/${mod.path}#${ref.name}`;
-};
 
 export const deletePackage = async (packageName: string) => {
   const packageDocId = getPackageDocId(packageName);

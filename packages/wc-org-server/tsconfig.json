@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
     "incremental": true,
+    "composite": true,
     "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "target": "es2021", 
     "module": "esnext", 
     "sourceMap": true,
     "outDir": "./", 
     "rootDir": "./src",
-    "composite": true,
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -22,5 +22,9 @@
     "forceConsistentCasingInFileNames": true 
   },
   "include": ["src/**/*.ts"],
-  "exclude": []
+  "exclude": [],
+  "references": [
+    {"path": "../wc-org-content"},
+    {"path": "../wc-org-shared"}
+  ]
 }

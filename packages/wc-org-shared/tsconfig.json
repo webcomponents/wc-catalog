@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
     "incremental": true,
+    "composite": true,
     "target": "es2021", 
     "module": "esnext", 
     "sourceMap": true,
     "outDir": "./out", 
     "rootDirs": ["./src", "./gen"], 
-    "composite": true,
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

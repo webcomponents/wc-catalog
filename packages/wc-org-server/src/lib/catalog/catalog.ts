@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2022 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 // import {readFile} from 'fs/promises';
 // import {createRequire} from 'module';
 import Router from '@koa/router';
@@ -42,7 +48,7 @@ catalogRouter.get('/element/:path+', async (context) => {
               tagName
               declaration
               customElementExport
-              jsExport
+              declaration
             }
             customElementsManifest
           }
@@ -55,16 +61,27 @@ catalogRouter.get('/element/:path+', async (context) => {
     throw new Error(result.errors.map((e) => e.message).join('\n'));
   }
   const {data} = result;
-
+  const packageVersion = data.package?.version;
+  if (packageVersion === undefined) {
+    throw new Error(`No such package version: ${packageName}`);
+  }
   const customElementsManifest =
-    data.package?.version?.customElementsManifest !== undefined &&
-    JSON.parse(data.package?.version?.customElementsManifest);
+    packageVersion.customElementsManifest !== undefined &&
+    JSON.parse(packageVersion.customElementsManifest);
+
+  const customElement = packageVersion.customElements?.[0];
+
+  if (customElement === undefined || customElement.tagName !== elementName) {
+    throw new Error('Internal error');
+  }
 
   const page = baseLayout.render({
     title: 'Catalog',
     content: renderElement({
       packageName: packageName!,
       elementName: elementName!,
+      declarationReference: customElement.declaration,
+      customElementExport: customElement.export,
       manifest: customElementsManifest,
     }),
   });

@@ -11,7 +11,8 @@
   "scripts": {
     "build": "wireit",
     "build:ts": "wireit",
-    "build:graphql": "wireit"
+    "build:graphql": "wireit",
+    "test": "wireit"
   },
   "wireit": {
     "build": {
@@ -55,13 +56,22 @@
         "gen/lib/schema.ts"
       ],
       "clean": "if-file-deleted"
+    },
+    "test": {
+      "command": "uvu test \".*_test\\.js$\"",
+      "dependencies": [
+        "build"
+      ],
+      "files": [],
+      "output": []
     }
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^2.6.2",
     "@graphql-codegen/typed-document-node": "^2.2.8",
     "@graphql-codegen/typescript": "^2.4.8",
-    "@graphql-codegen/typescript-resolvers": "^2.6.1"
+    "@graphql-codegen/typescript-resolvers": "^2.6.1",
+    "uvu": "^0.5.6"
   },
   "dependencies": {
     "@graphql-tools/schema": "^8.3.6",
