@@ -14,17 +14,18 @@ import {
 } from 'custom-elements-manifest/schema';
 
 /**
- * Serializes a reference to a string.
+ * Serializes a reference to a string, as used in the GraphQL API of the
+ * custom elements catalog.
  *
- * TODO: define format for package and module relative refs. Take a
- * Reference instead of individual params.
+ * TODO (justinfagnani): define format for package and module relative refs.
+ * Take a Reference object instead of individual params.
  */
 export const referenceString = (
   packageName: string,
   mod: Module,
-  ref: Reference
+  name: string
 ) => {
-  return `${packageName}/${mod.path}#${ref.name}`;
+  return `${packageName}/${mod.path}#${name}`;
 };
 
 /**

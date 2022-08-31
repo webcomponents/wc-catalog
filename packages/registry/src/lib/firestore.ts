@@ -324,12 +324,17 @@ const importPackageVersions = async (
             author,
             tagName: c.export.name,
             className: c.declaration.name,
+            // TODO (justinfagnani): we need to namespace custom element exports
             customElementExport: referenceString(
               packageName,
               c.module,
-              c.export
+              c.export.name
             ),
-            declaration: referenceString(packageName, c.module, c.declaration),
+            declaration: referenceString(
+              packageName,
+              c.module,
+              c.declaration.name
+            ),
           });
         }
       }
@@ -351,8 +356,16 @@ const importPackageVersions = async (
           author,
           tagName: c.export.name,
           className: c.declaration.name,
-          customElementExport: referenceString(packageName, c.module, c.export),
-          declaration: referenceString(packageName, c.module, c.declaration),
+          customElementExport: referenceString(
+            packageName,
+            c.module,
+            c.export.name
+          ),
+          declaration: referenceString(
+            packageName,
+            c.module,
+            c.declaration.name
+          ),
         })),
         customElementsManifest: customElementsManifestString,
       });
