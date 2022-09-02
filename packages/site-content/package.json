@@ -32,6 +32,9 @@
     },
     "build:site": {
       "command": "eleventy --config=.eleventy.cjs",
+      "dependencies": [
+        "build:ts"
+      ],
       "files": [
         ".eleventy.cjs",
         "site"

@@ -88,6 +88,11 @@ catalogRouter.get('/element/:path+', async (context) => {
   context.status = 200;
 });
 
+catalogRouter.post('/validator/', async (context, next) => {
+  console.log(context._matchedRoute);
+  await next();
+});
+
 // const replacements: Record<string, string> = {
 //   '<': '&lt;',
 //   '>': '&gt;',

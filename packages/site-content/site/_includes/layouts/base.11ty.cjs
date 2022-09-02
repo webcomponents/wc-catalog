@@ -1,5 +1,7 @@
 module.exports = {
   render(data) {
+    console.log('render', data.scripts);
+
     return `
 <!doctype html>
 <html lang="en">
@@ -14,7 +16,9 @@ module.exports = {
       href="https://fonts.googleapis.com/css?family=Material+Icons&display=block"
       rel="stylesheet"
     />
-    <script type="module" src="/lib/components/wco-app.js"></script>
+    ${(data.scripts ?? [])
+      .map((s) => `<script type="module" src="${s}"></script>`)
+      .join('\n')}
     <style>
       body {
         margin: 0;

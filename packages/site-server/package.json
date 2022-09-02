@@ -13,9 +13,9 @@
     "index.{d.ts,d.ts.map,js,js.map}"
   ],
   "scripts": {
-    "start": "node index.js",
-    "dev": "node --enable-source-maps dev.js",
-    "build": "wireit"
+    "build": "wireit",
+    "start": "wireit",
+    "start:dev": "wireit"
   },
   "wireit": {
     "build": {
@@ -37,6 +37,18 @@
         "tsconfig.tsbuildinfo"
       ],
       "clean": "if-file-deleted"
+    },
+    "start": {
+      "command": "node index.js",
+      "dependencies": [
+        "build"
+      ]
+    },
+    "start:dev": {
+      "command": "node --enable-source-maps dev.js",
+      "dependencies": [
+        "build"
+      ]
     }
   },
   "devDependencies": {

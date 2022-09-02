@@ -6,7 +6,7 @@
 
 import {suite} from 'uvu';
 import * as assert from 'uvu/assert';
-import {parseReferenceString} from '../index.js';
+import {parseReferenceString} from '../../lib/reference-string.js';
 
 const test = suite('Custom element manifest utils tests');
 

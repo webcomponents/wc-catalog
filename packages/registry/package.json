@@ -13,9 +13,9 @@
     "index.{d.ts,d.ts.map,js,js.map}"
   ],
   "scripts": {
-    "start": "node --enable-source-maps index.js",
-    "dev": "FIRESTORE_EMULATOR_HOST=localhost:8088 npm start",
     "build": "wireit",
+    "start": "wireit",
+    "start:dev": "wireit",
     "emulators:start": "firebase emulators:start --project wc-catalog",
     "firebase": "firebase"
   },
@@ -36,6 +36,18 @@
         "tsconfig.tsbuildinfo"
       ],
       "clean": "if-file-deleted"
+    },
+    "start": {
+      "command": "node --enable-source-maps index.js",
+      "dependencies": [
+        "build"
+      ]
+    },
+    "start:dev": {
+      "command": "FIRESTORE_EMULATOR_HOST=localhost:8088 npm start",
+      "dependencies": [
+        "build"
+      ]
     }
   },
   "devDependencies": {

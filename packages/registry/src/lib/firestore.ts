@@ -19,8 +19,11 @@ import firebase from 'firebase-admin';
 import {
   CustomElementInfo,
   getCustomElements as getCustomElementsFromManifest,
-  referenceString,
 } from '@webcomponents/custom-element-manifest-tools';
+import {
+  referenceString,
+} from '@webcomponents/custom-element-manifest-tools/lib/reference-string.js';
+
 import {fetchCustomElementsManifest, fetchPackage, Package} from './npm.js';
 import {
   CustomElement,
