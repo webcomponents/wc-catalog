@@ -1,0 +1,10 @@
+/demo/
+/lib/
+/out/
+/gen/
+/node_modules/
+/test/
+/index.*
+firebase-debug.log
+firestore-debug.log
+ui-debug.log

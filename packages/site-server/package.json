@@ -1,0 +1,74 @@
+{
+  "name": "@webcomponents/site-server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The webcomponents.org server",
+  "author": "Google LLC",
+  "homepage": "",
+  "license": "BSD-3-Clause",
+  "type": "module",
+  "main": "index.js",
+  "files": [
+    "lib",
+    "index.{d.ts,d.ts.map,js,js.map}"
+  ],
+  "scripts": {
+    "build": "wireit",
+    "start": "wireit",
+    "start:dev": "wireit"
+  },
+  "wireit": {
+    "build": {
+      "command": "../../node_modules/.bin/tsc",
+      "dependencies": [
+        "../custom-element-manifest-tools:build",
+        "../registry-api:build",
+        "../site-content:build",
+        "../registry:build"
+      ],
+      "files": [
+        "tsconfig.json",
+        "src/**/*.ts"
+      ],
+      "output": [
+        "lib",
+        "index.{js,js.map,d.ts,d.ts.map}",
+        "dev.{js,js.map,d.ts,d.ts.map}",
+        "tsconfig.tsbuildinfo"
+      ],
+      "clean": "if-file-deleted"
+    },
+    "start": {
+      "command": "node index.js",
+      "dependencies": [
+        "build"
+      ]
+    },
+    "start:dev": {
+      "command": "node --enable-source-maps dev.js",
+      "dependencies": [
+        "build"
+      ]
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.6",
+    "@web/dev-server": "^0.1.32"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.6.9",
+    "@koa/router": "^12.0.0",
+    "@types/koa": "^2.13.5",
+    "@types/koa__router": "^8.0.11",
+    "@types/koa-bodyparser": "^4.3.1",
+    "custom-elements-manifest": "^1.0.0",
+    "graphql": "^16.3.0",
+    "koa": "^2.13.1",
+    "koa-bodyparser": "^4.3.0",
+    "node-fetch": "^3.2.3",
+    "npm-registry-fetch": "^13.1.0",
+    "@webcomponents/site-content": "0.0.0",
+    "@webcomponents/registry-api": "0.0.0",
+    "@webcomponents/custom-element-manifest-tools": "0.0.0"
+  }
+}

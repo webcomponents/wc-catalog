@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "incremental": true,
+    "composite": true,
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
+    "target": "es2020",
+    "lib": ["DOM", "DOM.Iterable"],
+    "module": "es2020",
+    "rootDir": "./src",
+    "moduleResolution": "node",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": []
+}
